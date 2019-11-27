@@ -158,12 +158,12 @@ end
 %% solving
 
 options = optimoptions('linprog','Display', 'off');
-% try
+try
     z = linprog_gurobi(c,[A1;A2;A3;A4],[b1;b2;b3;b4],[],[],lb,[],[],options);
-% catch
-%     warning('Gurobi is not installed/working, trying Matlab solvers instead');
-%     z = linprog(c,[A1;A2;A3;A4],[b1;b2;b3;b4],[],[],lb,[],options);
-% end
+catch
+    warning('Gurobi is not installed/working, trying Matlab solvers instead');
+    z = linprog(c,[A1;A2;A3;A4],[b1;b2;b3;b4],[],[],lb,[],options);
+end
 
 if lambda > 0
     params1.phi = z(n+1 : 2*n) + z(2*n+1 : 3*n);
