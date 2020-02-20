@@ -1,6 +1,4 @@
 function loss = cross_validate(y, X, tCL, n_folds, task)
-% This code is based on that of cross validation from ITML
-%(Information theoretic Metric learning)
 
 
 [n, ~] = size(X);
@@ -40,10 +38,19 @@ for i=1:n_folds
     %% learning with the x_train and predicting with it
     f_hat = feval(tCL, y_train, X_train);
     
+    n_test = size(y_test, 1);
     if task == "classification"
-        loss(i) = mean(sign(f_hat(X_test)) ~= y_test);
+        scores = zeros(n_test, max(y_train));
+        for k=1:max(y_train)
+            scores(:,k) = f_hat{k}(X_test);
+        end
+    
+        [~, y_hat_test] = max(scores, [], 2);
+        
+        loss(i) = mean(y_hat_test ~= y_test);
     elseif task == "regression"
-        loss(i) = mean(abs(f_hat(X_test)-y_test));
+        y_hat_test = f_hat(X_test);
+        loss(i) = mean(abs(y_hat_test-y_test));
     end
     
 end

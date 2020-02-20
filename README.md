@@ -1,4 +1,6 @@
-# Piecewise Linear Regression via a Difference of Convex Functions
+# codecodecode
+
+Code for the "Piecewise Linear Regression via a Difference of Convex Functions" is attached.
 
 ## Prerequisites:
 1. MATLAB version > 2016

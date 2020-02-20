@@ -1,0 +1,55 @@
+Title:
+	ARESLab: Adaptive Regression Splines toolbox for Matlab/Octave
+
+Version:
+	1.13.0
+
+Date:
+	Newest version: May 15, 2016
+	First public release: November 9, 2009
+
+Author:
+	Gints Jekabsons (gints.jekabsons@rtu.lv)
+	Institute of Applied Computer Systems
+	Riga Technical University
+	Setas str. 1, LV-1048, Riga, Latvia
+
+URL:
+	http://www.cs.rtu.lv/jekabsons/
+
+Description:
+	ARESLab is a Matlab/Octave toolbox for building piecewise-linear
+	and piecewise-cubic regression models using the Multivariate
+	Adaptive Regression Splines method (also known as MARS).
+	The source code is tested under Matlab version 8.6 (R2015b) and
+	Octave version 4.0.0.
+
+Installation (for Matlab):
+	Start Matlab and select "Set path..." from the File menu. Click
+	"Add with subfolders" button and select the ARESLab folder in the
+	file dialog. Press the Save button in order to save your changes
+	to the Matlab search path. The toolbox is now installed. Have fun.
+
+Citing the toolbox:
+	Jekabsons G., ARESLab: Adaptive Regression Splines toolbox for
+	Matlab/Octave, 2016, available at http://www.cs.rtu.lv/jekabsons/
+
+License:
+	Copyright (C) 2009-2016  Gints Jekabsons
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+	Some parts of aresbuild and createList functions were initially
+	derived from ENTOOL toolbox (Merkwirth & Wichard 2003,
+	http://www.j-wichard.de/) which also falls under the GPL licence.
