@@ -7,16 +7,16 @@ from tqdm import tqdm
 n = 20
 dim = 2
 
-X = np.random.rand(n, dim)
+# X = np.random.rand(n, dim)
 
-# X = 4*np.random.rand(n, dim) - 2
-# y = np.sum(np.abs(X)**2, axis = 1) + 0.25*np.random.randn(n)
+X = 4*np.random.rand(n, dim) - 2
+y = np.sum(np.abs(X)**2, axis = 1) + 0.25*np.random.randn(n)
 
-X = np.load('X2.npy')
+# X = np.load('X2.npy')
 # y = np.load('y.npy')
 
 rho = 0.1
-T = 10000
+T = 1000
 
 # initial values
 # primal
