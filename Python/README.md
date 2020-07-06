@@ -12,6 +12,6 @@
 
 ## How to run?
 
-There is class provided which does piece-wise linear regression. See the main.py for an example on how to use it.
+There is class provided in "dc_regression.py" which does piece-wise linear regression. See the main.py for an example on how to use it.
 
 
