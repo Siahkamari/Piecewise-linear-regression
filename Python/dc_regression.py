@@ -136,7 +136,7 @@ class dc_regression:
                     q[i,d] = np.sign(temp1)*np.maximum(np.abs(temp1)+temp2, 0)
 
             #   L update
-            L = -1/(n*rho)* self.lanbda/np.sqrt(n)
+            L = -1/(n*rho)* self.lanbda
             for i in range(n):
                 L +=  1/n*( gamma[i]  + u[i])
                 for d in range(dim):
