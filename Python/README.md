@@ -1,7 +1,7 @@
 # Piecewise Linear Regression via a Difference of Convex Functions
 
 ## Prerequisites:
-1. Python 3.7
+1. python 3.7
 
 2. numpy
 
