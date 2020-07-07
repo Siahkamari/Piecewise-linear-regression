@@ -17,7 +17,7 @@ There is a class provided in "dc_regression.py" which does piece-wise linear reg
 
 ## Refferences
 
-This work is presneted at ICML2020 as [Piecewise Linear Regression via a Difference of Convex Functions](https://arxiv.org/pdf/2007.02422.pdf)
+This work appears at ICML2020 proceedings as [Piecewise Linear Regression via a Difference of Convex Functions](https://arxiv.org/pdf/2007.02422.pdf)
 
 ## Contact
 
