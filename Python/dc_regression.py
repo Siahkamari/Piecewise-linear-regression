@@ -88,7 +88,7 @@ class dc_regression:
             Sigma_i[-1] = linalg.inv(Sigma_i[i] + np.eye(dim))
 
         # ADMM iteration
-        for iter in tqdm(range(T)):
+        for iter in range(T):
             #   primal updates
             #   y_hat & z update
             for i in range(n):
