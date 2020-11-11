@@ -11,12 +11,12 @@ class dc_regression:
         self.b = 0
         self.lanbda = 1
 
-    def auto_tune(self, X, y):
+    def auto_tune(self, X, y, max_hyper_iter = 10):
         n_folds = 5
 
         lanbdas = [1e-3,1e-2,1e-1,1,1e1,1e2,1e3]
 
-        while True:
+        for _ in range(max_hyper_iter):
             i = 0
             loss = np.zeros(len(lanbdas))
             for lanbda in tqdm(lanbdas):
@@ -46,12 +46,10 @@ class dc_regression:
         else:
             self.lanbda = lanbda
 
-        if T == False:
-            T = 2*y.size
-
         n, dim = X.shape
         rho = 0.01
-        T = 2*n
+        if T == False:
+            T = 2*n
 
         # initial values
         # primal
