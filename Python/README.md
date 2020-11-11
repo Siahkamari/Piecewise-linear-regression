@@ -16,7 +16,7 @@
 
 ## How to run with CPU?
 
-There is a class provided in "dc_regression.py" which does piece-wise linear regression. See the "example.ipynb" for an example on how to use it.
+There is a class provided in "dc_regression.py" which does piece-wise linear regression. See the "example_CPU.ipynb" for an example on how to use it.
 
 ## How to run with GPU?
 
