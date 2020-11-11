@@ -9,7 +9,7 @@
 
 4. [tqdm](https://pypi.org/project/tqdm/)
 
-5. [Cuda](https://developer.nvidia.com/cuda-downloads) (only for GPU version)
+5. [cuda](https://developer.nvidia.com/cuda-downloads) (only for GPU version)
 
 6. [torch](https://pytorch.org/) 1.7.0+cu110 (only for GPU version)
 
