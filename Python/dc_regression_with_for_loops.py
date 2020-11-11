@@ -67,34 +67,35 @@ class dc_regression:
         # slack
         s = np.zeros([n, n])
         t = np.zeros([n, n])
-        u = np.zeros([n])
+        u = np.zeros(n)
 
         # dual
         alpha = np.zeros([n, n])
         beta = np.zeros([n, n])
-        gamma = np.zeros([n])
+        gamma = np.zeros(n)
         eta = np.zeros([n, dim])
         zeta = np.zeros([n, dim])
 
         # preprocess1
-        XjXj = np.dot(X.T,X)
-        Xbar = np.mean(X, axis = 0)
-        ybar = np.mean(y)
-        Sigma_i = np.zeros([n,dim,dim])
-
+        XjXj = 0
         for i in range(n):
-            Sigma_i[i,:,:] = n*np.outer(X[i],X[i]) + XjXj - n*(np.outer(Xbar,X[i]) + np.outer(X[i],Xbar))
-            Sigma_i[i,:,:] = linalg.inv(Sigma_i[i,:,:] + np.eye(dim))
+            XjXj = XjXj + np.outer(X[i],X[i])
+        Xbar = np.mean(X, axis = 0)
+
+        Sigma_i = []
+        for i in range(n):
+            Sigma_i += [n*np.outer(X[i],X[i]) + XjXj - n*(np.outer(Xbar,X[i]) + np.outer(X[i],Xbar))]
+            Sigma_i[-1] = linalg.inv(Sigma_i[i] + np.eye(dim))
 
         # ADMM iteration
-        for _ in range(T):
+        for iter in range(T):
             #   primal updates
             #   y_hat & z update
             for i in range(n):
                 y_hat[i] = 2/(2+n*rho) * y[i]
                 z[i] = -1/(2+n*rho)*y[i]
                 for j in range(n):
-                    temp1 = alpha[j,i] -  alpha[i,j] + s[j,i] - s[i,j] + np.dot(a[i] + a[j], X[i] - X[j]) + 2*ybar
+                    temp1 = alpha[j,i] -  alpha[i,j] + s[j,i] - s[i,j] + np.dot(a[i] + a[j], X[i] - X[j]) + 2*y[j]
                     temp2 = beta[j,i] - beta[i,j] + t[j,i] - t[i,j] + np.dot(b[i] + b[j], X[i] - X[j])
 
                     y_hat[i] +=   rho/(2+n*rho)/2 * temp1  - rho/(2+n*rho)/2 * temp2
@@ -106,16 +107,13 @@ class dc_regression:
                 for j in range(n):
                     a[i] += (alpha[i,j] + s[i,j] + y_hat[i] - y_hat[j] + z[i] - z[j])*(X[i]-X[j])
                 a[i] = np.matmul(Sigma_i[i], a[i])
-            for i in range(n):
-                a[i] = np.matmul(Sigma_i[i,:,:], a[i])
 
             #   b update
             for i in range(n):
                 b[i] = q[i] - zeta[i]
                 for j in range(n):
                     b[i] += (beta[i,j] + t[i,j] + z[i] - z[j])*(X[i]-X[j])
-            for i in range(n):
-                b[i] = np.matmul(Sigma_i[i,:,:], b[i])
+                b[i] = np.matmul(Sigma_i[i], b[i])
 
             #   p updates
             for i in range(n):
@@ -123,8 +121,8 @@ class dc_regression:
                 for d in range(dim):
                     temp3 += np.abs(p[i,d]) + np.abs(q[i,d])
                 for d in range(dim):
-                    temp1 = 1/2* (a[i,d] + eta[i,d])
-                    temp2 = 1/2*(L - u[i] - gamma[i] + np.abs(p[i,d]) - temp3)
+                    temp1 = 1/2* ( a[i,d] + eta[i,d])
+                    temp2 = 1/2*( L - u[i] - gamma[i] + np.abs(p[i,d]) - temp3)
                     p[i,d] = np.sign(temp1)*np.maximum(np.abs(temp1)+temp2, 0)
 
             #   q updates
@@ -133,8 +131,8 @@ class dc_regression:
                 for d in range(dim):
                     temp3 += np.abs(p[i,d]) + np.abs(q[i,d])
                 for d in range(dim):
-                    temp1 = 1/2* (b[i,d] + zeta[i,d])
-                    temp2 = 1/2*(L - u[i] - gamma[i] + np.abs(q[i,d]) - temp3)
+                    temp1 = 1/2* ( b[i,d] + zeta[i,d])
+                    temp2 = 1/2*( L - u[i] - gamma[i] + np.abs(q[i,d]) - temp3)
                     q[i,d] = np.sign(temp1)*np.maximum(np.abs(temp1)+temp2, 0)
 
             #   L update
@@ -153,7 +151,7 @@ class dc_regression:
 
                     t[i,j] = -beta[i,j] - z[i] + z[j] + np.dot(b[i], X[i]-X[j])
                     t[i,j] = np.maximum(t[i,j] ,0)
-
+                    
             #   u update
             for i in range(n):
                 u[i] = -gamma[i] + L
@@ -166,14 +164,13 @@ class dc_regression:
                 for j in range(n):
                     alpha[i,j] +=  s[i,j] + y_hat[i] - y_hat[j] + z[i] - z[j] - np.dot(a[i], X[i]-X[j])
                     beta[i,j] +=  t[i,j] + z[i] - z[j] - np.dot(b[i], X[i]-X[j])
-
+        
             for i in range(n):
                 gamma[i] += u[i] - L 
                 for d in range(dim):
                     gamma[i] +=  np.abs(p[i,d]) + np.abs(q[i,d])
                     eta[i,d] +=  a[i,d] - p[i,d]
                     zeta[i,d] +=  b[i,d] - q[i,d]
-
 
         y_hat = y_hat + z - np.sum(a*X, axis = 1)
         z = z - np.sum(b*X, axis = 1)
@@ -190,7 +187,7 @@ class dc_regression:
 
     def cross_validate(self, X, y, n_folds):
 
-        n, _ = X.shape
+        n, dim = X.shape
 
         # Permute the rows of X and y
         rp = np.random.permutation(n)
@@ -217,5 +214,4 @@ class dc_regression:
 
         return np.mean(loss)
     
-
 
