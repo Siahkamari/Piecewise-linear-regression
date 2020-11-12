@@ -38,7 +38,7 @@ class dc_regression:
                     break
 
     def fit(self, X, y, lanbda = False, T = False):
-
+        
         if lanbda == False:
             self.auto_tune(X, y)
             return
