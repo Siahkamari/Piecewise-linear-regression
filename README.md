@@ -2,7 +2,9 @@
 
 ## Choose Your Destinty! Matlab or Python
 
-There exist a Matlab implementation based on Gurobi solvers and a python version with our parallel algorithm which can be further adapted to GPUs.
+This reepository provides a python implementation of our piecewise linear regression algorithm both with CPU and GPU.
+
+The experiments that are shown in our paper are run with MATLAB which is a slower implementation than that of Python.
 
 
 ## Refferences
