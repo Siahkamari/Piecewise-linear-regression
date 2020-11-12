@@ -1,0 +1,1 @@
+qsub -P textconv -l gpus=1 -l gpu_c=3.5 -N "out" -o "out" -j y script.sh
