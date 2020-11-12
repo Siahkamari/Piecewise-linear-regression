@@ -1,4 +1,4 @@
 {
     "python.pythonPath": "/bin/python3",
-    "jupyter.jupyterServerType": "local"
+    "jupyter.jupyterServerType": "remote"
 }
