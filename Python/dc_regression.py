@@ -61,17 +61,17 @@ class dc_regression:
         p = np.zeros([n, dim])
         q = np.zeros([n, dim])
 
-        L = 0
+        L = np.zeros([1, dim])
 
         # slack
         s = np.zeros([n, n])
         t = np.zeros([n, n])
-        u = np.zeros([n, 1])
+        u = np.zeros([n, dim])
 
         # dual
         alpha = np.zeros([n, n])
         beta = np.zeros([n, n])
-        gamma = np.zeros([n, 1])
+        gamma = np.zeros([n, dim])
         eta = np.zeros([n, dim])
         zeta = np.zeros([n, dim])
 
@@ -111,21 +111,18 @@ class dc_regression:
             b = np.matmul(Sigma_i,b.reshape(n,dim,1)).reshape(n,dim)
 
             #   p updates
-            temp3 = np.sum(np.abs(p) + np.abs(q), axis=1).reshape(-1,1)
             temp1 = 1/2* (a + eta)
-            temp2 = 1/2*(L - u - gamma + np.abs(p) - temp3)
+            temp2 = 1/2*(L - u - gamma - np.abs(q))
             p = np.sign(temp1)*np.maximum(np.abs(temp1)+temp2, 0)
 
             #   q updates
-            temp3 = np.sum(np.abs(p) + np.abs(q), axis=1).reshape(-1,1)
             temp1 = 1/2* (b + zeta)
-            temp2 = 1/2*(L - u - gamma + np.abs(q) - temp3)
+            temp2 = 1/2*(L - u - gamma - np.abs(p))
             q = np.sign(temp1)*np.maximum(np.abs(temp1)+temp2, 0)
 
             #   L update
             L = -1/(n*rho)* self.lanbda
-            L +=  1/n*np.sum( gamma  + u)
-            L += 1/n* np.sum(np.abs(p) +np.abs(q))
+            L +=  1/n*np.sum( gamma  + u + np.abs(p) + np.abs(q), axis=0).reshape(1,-1)
             
             #   slack updates
             #   s &t update
@@ -135,15 +132,13 @@ class dc_regression:
             t = np.maximum(t ,0) 
 
             #   u update
-            u = -gamma + L
-            u +=  np.sum(- np.abs(q) - np.abs(p), axis =1).reshape(-1,1)
+            u = -gamma + L - np.abs(q) - np.abs(p)
             u = np.maximum(u, 0)
 
             #   dual updates
             alpha +=  s + y_hat.reshape(-1,1) - y_hat.reshape(1,-1) + z.reshape(-1,1) - z.reshape(1,-1) - np.sum(a*X,axis=1).reshape(-1,1) + np.dot(a, X.T)
             beta +=  t + z.reshape(-1,1) - z.reshape(1,-1) - np.sum(b*X,axis=1).reshape(-1,1) + np.dot(b, X.T)
-            gamma += u - L 
-            gamma += np.sum(np.abs(p) + np.abs(q), axis=1).reshape(-1,1)
+            gamma += u - L + np.abs(p) + np.abs(q)
             eta += a - p
             zeta += b - q
 

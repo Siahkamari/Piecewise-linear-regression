@@ -65,17 +65,17 @@ class dc_regression:
         p = th.zeros(n, dim, device=device)
         q = th.zeros(n, dim, device=device)
 
-        L = th.zeros(1, device=device)
+        L = th.zeros(1, dim, device=device)
 
         # slack
         s = th.zeros(n, n, device=device)
         t = th.zeros(n, n, device=device)
-        u = th.zeros(n, 1, device=device)
+        u = th.zeros(n, dim, device=device)
 
         # dual
         alpha = th.zeros(n, n, device=device)
         beta = th.zeros(n, n, device=device)
-        gamma = th.zeros(n, 1, device=device)
+        gamma = th.zeros(n, dim, device=device)
         eta = th.zeros(n, dim, device=device)
         zeta = th.zeros(n, dim, device=device)
 
@@ -115,21 +115,18 @@ class dc_regression:
             b = th.matmul(Sigma_i,b.reshape(n,dim,1)).reshape(n,dim)
 
             #   p updates
-            temp3 = th.sum(th.abs(p) + th.abs(q), dim=1).reshape(-1,1)
             temp1 = 1/2* (a + eta)
-            temp2 = 1/2*(L - u - gamma + th.abs(p) - temp3)
+            temp2 = 1/2*(L - u - gamma - th.abs(p))
             p = th.sign(temp1)*th.maximum(th.abs(temp1)+temp2, th.zeros(1, device=device))
 
             #   q updates
-            temp3 = th.sum(th.abs(p) + th.abs(q), dim=1).reshape(-1,1)
             temp1 = 1/2* (b + zeta)
-            temp2 = 1/2*(L - u - gamma + th.abs(q) - temp3)
+            temp2 = 1/2*(L - u - gamma - th.abs(q))
             q = th.sign(temp1)*th.maximum(th.abs(temp1)+temp2, th.zeros(1,device=device))
 
             #   L update
             L = -1/(n*rho)* self.lanbda
-            L +=  1/n*th.sum( gamma  + u)
-            L += 1/n* th.sum(th.abs(p) +th.abs(q))
+            L +=  1/n*th.sum( gamma  + u + th.abs(p) + th.abs(q), dim=0).reshape(1,-1)
             
             #   slack updates
             #   s &t update
@@ -139,15 +136,13 @@ class dc_regression:
             t = th.maximum(t, th.zeros(1,device=device)) 
 
             #   u update
-            u = -gamma + L
-            u +=  th.sum(- th.abs(q) - th.abs(p), dim =1).reshape(-1,1)
+            u = -gamma + L - th.abs(q) - th.abs(p)
             u = th.maximum(u, th.zeros(1,device=device))
 
             #   dual updates
             alpha +=  s + y_hat.reshape(-1,1) - y_hat.reshape(1,-1) + z.reshape(-1,1) - z.reshape(1,-1) - th.sum(a*X,dim=1).reshape(-1,1) + th.matmul(a, X.T)
             beta +=  t + z.reshape(-1,1) - z.reshape(1,-1) - th.sum(b*X,dim=1).reshape(-1,1) + th.matmul(b, X.T)
-            gamma += u - L 
-            gamma += th.sum(th.abs(p) + th.abs(q), dim=1).reshape(-1,1)
+            gamma += u - L + th.abs(p) + th.abs(q)
             eta += a - p
             zeta += b - q
 
