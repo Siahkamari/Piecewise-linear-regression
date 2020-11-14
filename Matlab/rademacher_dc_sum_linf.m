@@ -1,4 +1,4 @@
-function Rn = rademacher_dc_sum_linf(X, n_flips)
+function Dn = rademacher_dc_sum_linf(X, n_flips)
 
 [n,d] = size(X);
 
@@ -77,15 +77,31 @@ b32 = 1;
 lb = zeros(2*n + 4*n*d + d, 1);
 lb(1:n) = -inf;
 
-%% Solving
-options = optimoptions('linprog', 'Display','off');
-Rn = zeros(n_flips,1);
+Dn = zeros(n_flips,1);
 for flip = 1:n_flips
     % cost vector
-%     c_0 = [ones(floor(n/2),1);-ones(floor(n/2),1)];
     c_0 = [ones(floor(n/2),1);-ones(floor(n/2),1)];
     c = [c_0(randperm(n));zeros(n+4*n*d + d,1)]';
-    [~, Rn(flip)] = linprog_gurobi(c,[A1;A2;A3;A32],[b1;b2;b3;b32],[],[],lb,[],options);
+    
+    %% solving
+    try
+        model.A = -[A1;A2;A3;A32];
+        model.obj = c;
+        model.rhs = full(-[b1;b2;b3;b32]);
+        model.sense = '>';
+        
+        params.Threads = 16;
+        params.OutputFlag = 0;
+        result = gurobi(model, params);
+        Dn(flip) = result.objval;
+        
+    catch
+%         warning('Gurobi is not installed/working. Instead using MATLAB linear program solvers.')
+        options = optimoptions('linprog','Display','off');
+        lb = zeros(2*n+4*n*d,1);
+        [~, Dn(flip) ] = linprog(c, [A1;A2;A3;A32],[b1;b2;b3;b32], [],[], lb, [], options );
+    end
+    
 end
-Rn = - mean(Rn) / n;
+Dn = - 2*mean(Dn) / n;
 

@@ -4,12 +4,12 @@
 % regularization constant
 
 clear,  clc
-rng(0);
+% rng(0);
 
 %% settings
-d = 2;                          % dimmension of data
-n_train = 85;                   % number of data points
-sigma = 0.5;                    % standard deviation of the noise
+d = 100;                          % dimmension of data
+n_train = 10;                   % number of data points
+sigma = 0.0;                    % standard deviation of the noise
 
 %% generating synthetic data
 X_train = rand(n_train, d);
@@ -19,7 +19,7 @@ X_test = rand(10000, d);
 y_test = regfunction(X_test, 0);
 
 %% learning
-Dn = dc_maximum_discrep(X_train(1:2*floor(n_train/2),:), 2);
+Dn = rademacher_dc_sum_linf(X_train(1:2*floor(n_train/2),:), 2)
 lambda_0 = 4*Dn*n_train;
 f_hatTh = dc_fit(y_train, X_train, lambda_0);
 
