@@ -5,9 +5,9 @@
 
 2. [torch](https://pytorch.org/) (version 1.7.0 or higher?!)
 
-3. numpy
+3. [numpy](https://numpy.org)
 
-4. matplotlib
+4. [matplotlib](https://matplotlib.org)
 
 5. [tqdm](https://pypi.org/project/tqdm/)
 
