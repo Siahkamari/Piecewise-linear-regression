@@ -18,7 +18,7 @@
 
 ## How to run?
 
-There is a class provided in "piecewise_linear_estimation.py" which does piece-wise linear regression. See the "example_airfoil_data.ipynb" for an example on how to use it. If you have a CUDA enabled GPU the training time would be siginificantly faster.
+There is a class provided in "piecewise_linear_estimation.py" which does piece-wise linear regression. See the "example.ipynb" to learn on how to use it. If you have a CUDA enabled GPU the training time would be siginificantly faster.
 
 
 ## Refferences
