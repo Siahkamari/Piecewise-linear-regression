@@ -14,13 +14,9 @@
 6. [torch](https://pytorch.org/) 1.7.0+cu110 (only for GPU version)
 
 
-## How to run with CPU?
+## How to run?
 
-There is a class provided in "dc_regression.py" which does piece-wise linear regression. See the "example_CPU.ipynb" for an example on how to use it.
-
-## How to run with GPU?
-
-If you have a CUDA enabled GPU, There is a class provided in "dc_regression_gpu.py" which does piece-wise linear regression. See the "example_GPU.ipynb" for an example on how to use it.
+There is a class provided in "piecewise_linear_estimation.py" which does piece-wise linear regression. See the "example_airfoil_data.ipynb" for an example on how to use it. If you have a CUDA enabled GPU the training time would be siginificantly faster.
 
 
 ## Refferences
