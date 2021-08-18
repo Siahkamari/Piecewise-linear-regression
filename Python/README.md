@@ -3,15 +3,17 @@
 ## Prerequisites:
 1. python 3.7
 
-2. numpy
+2. [torch](https://pytorch.org/) 1.7.0+cu110 (only for GPU version)
 
-3. matplotlib
+3. numpy
 
-4. [tqdm](https://pypi.org/project/tqdm/)
+4. matplotlib
 
-5. [cuda](https://developer.nvidia.com/cuda-downloads) (only for GPU version)
+5. [tqdm](https://pypi.org/project/tqdm/)
 
-6. [torch](https://pytorch.org/) 1.7.0+cu110 (only for GPU version)
+6. [cuda](https://developer.nvidia.com/cuda-downloads) (if you have GPU!)
+
+
 
 
 ## How to run?
