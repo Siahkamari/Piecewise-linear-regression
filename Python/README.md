@@ -3,7 +3,7 @@
 ## Prerequisites:
 1. python 3.7
 
-2. [torch](https://pytorch.org/) 1.7.0+cu110 (only for GPU version)
+2. [torch](https://pytorch.org/) 1.7.0+cu110
 
 3. numpy
 
