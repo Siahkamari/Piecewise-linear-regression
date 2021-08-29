@@ -2,7 +2,7 @@
 
 ## Choose Your Destinty! Matlab or Python
 
-This reepository provides a python implementation of our piecewise linear regression algorithm both with CPU and GPU.
+This repository provides a python implementation of our piecewise linear regression algorithm both with CPU and GPU.
 
 The experiments that are shown in our paper are run with MATLAB which is a slower implementation than that of Python.
 
