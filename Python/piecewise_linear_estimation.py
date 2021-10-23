@@ -380,8 +380,8 @@ class dc_regression(convex_regression):
     mul_T = 1
     while True:
       message = 'ADMM iterations, R^2 = ' + "{:.3f}".format(R2_old.cpu().numpy())
-      for _ in tqdm(range(n_iter), desc=message, leave = False):
-      # for _ in range(n_iter):
+#       for _ in tqdm(range(n_iter), desc=message, leave = False):
+      for _ in range(n_iter):
         #   1st block
         theta_1 = self.theta_update(X, p_1, eta_1, alpha_1, s_1)
         theta_2 = self.theta_update(X, p_2, eta_2, alpha_2, s_2)
