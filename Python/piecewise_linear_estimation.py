@@ -3,7 +3,7 @@ import torch.linalg as linalg
 from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
 import time
-from metric_learning_objectives import objectives
+# from metric_learning_objectives import objectives
 
 global zero
 
