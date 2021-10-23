@@ -3,6 +3,8 @@ import torch.linalg as linalg
 from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
 import time
+from metric_learning_objectives import objectives
+
 global zero
 
 class tuner:
@@ -20,6 +22,8 @@ class tuner:
   
   def fit(self, X, y, lanbda = 'auto', n_iter = 'auto', rho = 0.01):
     self.rho = rho
+    X = X.clone().detach().to(self.device).double()
+    y = y.clone().detach().to(self.device).double()
 
     if n_iter != 'auto':
       self.n_iter = n_iter
@@ -65,6 +69,7 @@ class tuner:
       n_iters = th.zeros(len(lanbdas), device=self.device)
       
       for lanbda in tqdm(lanbdas, desc='Search for lanbda'):
+      # for lanbda in lanbdas:
         self.lanbda = lanbda
         score_vals[i], n_iters[i] = self.cross_validate(X, y)
         i += 1
@@ -127,9 +132,10 @@ class tuner:
 
     print("lanbda = ", "{:.2e}".format(float(self.lanbda)), 
     ", n_iter =", int(th.mean(n_iter)),
-    ", training", self.task, " = ", "{:.3f}".format(th.mean(score_train)),
-    ", validation",self.task, " = ", "{:.3f}".format(th.mean(score_val)),
-    ", L = ","{:.3e}".format(th.mean(L)))
+    ", training score = ", "{:.3f}".format(th.mean(score_train)),
+    ", validation score = ", "{:.3f}".format(th.mean(score_val)),
+    # ", L = ","{:.3e}".format(th.mean(L)),
+    )
 
     return th.mean(score_val), int(th.mean(n_iter))
   
@@ -140,8 +146,8 @@ class convex_regression(tuner):
     self.X_bar = 0
     self.y_hat = 0
     self.a = 0
-    self.task = 'R^2'
     self.m = 'n'
+    self.task = 'R^2'
 
   def convex_params(self, dtype, n, dim):
     device = self.device
@@ -314,15 +320,12 @@ class convex_regression(tuner):
     return a - p
 
   def predict(self, X):
+    X = X.clone().detach().to(self.device).double()
     return th.max(self.y_hat.reshape(1,-1) + th.matmul(X - self.X_bar, self.a.T), dim=1)[0] + self.y_bar
   
-  def score(self, X, y, X_train=None, y_train=None, task=None):
-    if task == None:
-      task = self.task
-    if task == 'R^2':
-      return 1.0 - th.mean((self.predict(X)-y)**2)/th.var(y)
-    else:
-      raise("score functions chosen not recognized")
+  def score(self, X, y, X_val = None, y_val=None, task=None):
+    y = y.clone().detach().to(self.device).double()
+    return 1.0 - th.mean((self.predict(X)-y)**2)/th.var(y)
 
 
 class dc_regression(convex_regression):
@@ -334,8 +337,10 @@ class dc_regression(convex_regression):
     self.y_hat_2 = 0
     self.a_1 = 0
     self.a_2 = 0
-    self.task = 'R^2'
     self.m = 'n'
+    self.task = 'R^2'
+    self.L1 = 0
+    self.L2 = 0
 
   def fit_core(self, X, y, X_val = None, y_val = None):
     n, dim = X.shape
@@ -368,14 +373,15 @@ class dc_regression(convex_regression):
     self.y_hat_2 = y_hat_2 - th.sum(a_2*X, dim = 1) 
     self.a_1 = th.clone(a_1)
     self.a_2 = th.clone(a_2)
-    self.L = th.clone(L_1+L_2)
+    self.L1 = th.clone(L_1)
+    self.L2 = th.clone(L_2)
 
     R2_old = self.score(X_val, y_val) if (X_val != None) else self.score(X+self.X_bar, y+self.y_bar)
     mul_T = 1
     while True:
       message = 'ADMM iterations, R^2 = ' + "{:.3f}".format(R2_old.cpu().numpy())
-      # for _ in tqdm(range(n_iter), desc=message, leave = False):
-      for _ in range(n_iter):
+      for _ in tqdm(range(n_iter), desc=message, leave = False):
+      # for _ in range(n_iter):
         #   1st block
         theta_1 = self.theta_update(X, p_1, eta_1, alpha_1, s_1)
         theta_2 = self.theta_update(X, p_2, eta_2, alpha_2, s_2)
@@ -416,12 +422,14 @@ class dc_regression(convex_regression):
       y_hat_2_old = th.clone(self.y_hat_2)
       a_1_old = th.clone(self.a_1)
       a_2_old = th.clone(self.a_2)
-      L_old = th.clone(self.L)
+      L1_old = th.clone(self.L1)
+      L2_old = th.clone(self.L2)
       self.y_hat_1 = y_hat_1 - th.sum(a_1*X, dim = 1) 
       self.y_hat_2 = y_hat_2 - th.sum(a_2*X, dim = 1) 
       self.a_1 = th.clone(a_1)
       self.a_2 = th.clone(a_2)
-      self.L = th.clone(L_1+L_2)
+      self.L1 = th.clone(L_1)
+      self.L2 = th.clone(L_2)
       R2 = self.score(X_val, y_val) if (X_val != None) else self.score(X+self.X_bar, y+self.y_bar)
       #   enough training or not?
       if self.n_iter != None:
@@ -432,20 +440,192 @@ class dc_regression(convex_regression):
           self.y_hat_2 = y_hat_2_old
           self.a_1 = a_1_old
           self.a_2 = a_2_old
-          self.L = L_old
+          self.L1 = L1_old
+          self.L2 = L2_old
           mul_T -= 1
         break
       else:
         R2_old = th.clone(R2)
         mul_T += 1
 
+    self.L = self.L1 + self.L2
     X += self.X_bar
     y += self.y_bar 
     return mul_T*n_iter
 
   def predict(self, X):
+    X = X.clone().detach().to(self.device).double()
     out = self.y_bar + \
         th.max(self.y_hat_1.reshape(1,-1) + th.matmul(X - self.X_bar, self.a_1.T), dim=1)[0] +\
         - th.max(self.y_hat_2.reshape(1,-1) + th.matmul(X - self.X_bar, self.a_2.T), dim=1)[0]
     return  out
 
+class PBDL(convex_regression):
+  def __init__(self):
+    tuner.__init__(self)
+    self.X_bar = 0
+    self.z = 0
+    self.a = 0
+    self.m = 'n^2'
+    self.task = 'pairwise'
+
+  def fit_core(self, X, y, X_val = None, y_val = None):
+    n, dim = X.shape
+    n_iter = n if self.n_iter == None else self.n_iter 
+    rho = self.rho
+      
+    # initial values
+    dtype = X.dtype
+
+    dtype = X.dtype
+    z, a, p, L, s, u, alpha, gamma, eta = self.convex_params(dtype, n, dim)
+    zeta = th.zeros([n, n], device=self.device, dtype=dtype)   # block 1
+    t = th.zeros([n, n], device=self.device, dtype=dtype)   # block 2
+    tau = th.zeros([n, n], device=self.device, dtype=dtype)
+    
+    # preprocess1
+    iota = 2*(y.reshape(-1,1) == y.reshape(1,-1)).float() -1
+
+    self.X_bar = th.mean(X, dim = 0)
+    X -= self.X_bar
+    Sigma = self.compute_Sigma(X)
+    D = self.compute_D(X, Sigma)
+
+    h = 2*n -\
+      n**2*th.matmul(X.reshape(n,1,dim),th.matmul(Sigma, X.reshape(n,dim,1))).reshape(-1)
+
+    Omega = th.linalg.inv(th.diag(h)  - n*D)
+
+    # ADMM iteration
+    self.z = z - th.sum(a*X, dim = 1) 
+    self.a = th.clone(a)
+    self.L = th.clone(L)
+    
+    if X_val != None:
+      score_old = self.score(X_val, y_val, X+self.X_bar, y)
+    else:
+      score_old = self.score(X+self.X_bar, y)
+
+    mul_T = 1
+    while True:
+      # for _ in tqdm(range(n_iter), desc='ADMM iterations', leave = False):
+      for _ in range(n_iter):
+        #   1st block primals
+        zeta = self.zeta_update(rho, tau, iota, s, t)
+        theta = self.theta_update(X, p, eta, alpha, s)
+        beta = self.beta_update(alpha, s)
+        nu = self.nu_update(X, Sigma, theta)
+        z = Omega@(nu - beta)
+        a = self.a_update(X, z, theta, Sigma)
+
+        #   2nd block primals
+        L = self.L_update(gamma, th.abs(eta+a), self.lanbda/rho)
+        u = self.u_update(L, gamma, a, eta)
+        p = self.p_update(a, eta, L, u, gamma)
+        s = self.s_update(tau, iota, zeta, alpha, z, a, X)
+        t = self.t_update(tau, iota, zeta, s)
+
+        #   dual updates
+        alpha += self.alpha_update(X, s, z, a)
+        tau += self.tau_update(iota, s, t, zeta)
+        gamma += self.gamma_update(u, L, p)
+        eta += self.eta_update(a, p)
+
+      #   new checkpoint
+      z_old = th.clone(self.z)
+      a_old = th.clone(self.a)
+      L_old = th.clone(self.L)
+      self.z = z - th.sum(a*X, dim = 1) 
+      self.a = th.clone(a)
+      self.L = th.clone(L)
+      
+      if X_val != None:
+        score_new = self.score(X_val, y_val, X+self.X_bar, y)
+      else:
+        score_new = self.score(X+self.X_bar, y)
+
+      #   enough training or not?
+      if self.n_iter != None:
+        break
+      elif score_new - score_old <= self.sensitivity:
+        if score_new - score_old < 0:
+          self.z = z_old
+          self.a = a_old
+          self.L = L_old
+          mul_T -= 1
+        break
+      else:
+        score_old = th.clone(score_new)
+        mul_T += 1
+
+    X += self.X_bar
+    return mul_T*n_iter
+
+  def zeta_update(self, rho, tau, iota, s, t):
+    return th.maximum(-1/rho + tau + iota*s - iota + t + 1, zero)
+  
+  def s_update(self,tau, iota, zeta, alpha, z, a, X):
+    pi1 = -tau + iota - 1 + zeta
+    pi2 = -alpha -z.reshape(-1,1) + z.reshape(1,-1) + th.sum(a*X,dim=1).reshape(-1,1) - th.matmul(a, X.T)
+    s = 1/2*(pi2 + iota*pi1 - iota*th.maximum(pi1-iota*pi2,th.zeros(1,device=self.device)))
+    return th.maximum(s ,zero)
+
+  def t_update(self, tau, iota, zeta, s):
+    pi1 = -tau + iota - 1 + zeta
+    return th.maximum(pi1 - iota*s ,zero)
+  
+  def tau_update(self, iota, s, t, zeta):
+    return iota*s - iota + t + 1 - zeta
+
+  def phi(self, X):
+    X = X.clone().detach().to(self.device).double()
+    return th.max(self.z.reshape(1,-1) + th.matmul(X - self.X_bar, self.a.T), dim=1)[0]
+  
+  def bregman_div(self, X1, X2):
+    X1 = X1.clone().detach().to(self.device).double()
+    X2 = X2.clone().detach().to(self.device).double()
+    i1 = th.argmax(self.z.reshape(1,-1) + th.matmul(X1 - self.X_bar, self.a.T), dim=1)
+    i2 = th.argmax(self.z.reshape(1,-1) + th.matmul(X2 - self.X_bar, self.a.T), dim=1)
+    
+     # acts one vs all or entry-wise
+    return self.z[i1].reshape(1,-1) - self.z[i2].reshape(1,-1) + \
+      th.sum((X1 - self.X_bar)*(self.a[i1] - self.a[i2]), dim=1)
+
+  def is_similar(self, X_que, X_pool):
+    divs = self.bregman_div(X_que, X_pool)[0]
+    return divs < th.ones(1, device=self.device)
+
+  def rank(self, X_que, X_pool):
+    divs = self.bregman_div(X_que, X_pool)[0]
+    return th.argsort(divs)
+
+  def classify(self, X_que, y_pool, X_pool, k=5):
+    n_que = X_que.shape[0]
+    y_pred = th.zeros(n_que, device=self.device, dtype=th.int)
+    for i in range(n_que):
+      ranks = self.rank(X_que[i], X_pool)
+      y_pred[i] = th.mode(y_pool[ranks[0:k]])[0].int()
+    return y_pred
+
+  def score(self, X_que, y_que, X_pool=None, y_pool=None, task=None):
+    if X_pool == None:
+      X_pool = X_que
+      y_pool = y_que
+
+    y_que = y_que.clone().detach().to(self.device).double()
+    y_pool = y_pool.clone().detach().to(self.device).double()
+
+    objective = objectives(rank=self.rank,
+     classify=lambda X_que: self.classify(X_que, y_pool, X_pool, k=5),
+     is_similar=self.is_similar)
+
+    if (task == None) or (task == 'pairwise'):
+      return objective.pairwise_score(y_que, X_que)
+    elif task == 'map':
+      return objective.mean_average_precision(y_que, X_que, y_pool, X_pool)
+    elif task == 'auc':
+      return objective.area_under_the_curve(y_que, X_que, y_pool, X_pool)
+    elif task == 'knn':
+      return objective.accuracy(y_que, X_que)
+    else:
+      raise("score functions chosen not recognized")
