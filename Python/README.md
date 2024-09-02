@@ -1,20 +1,7 @@
 # Piecewise Linear Regression via a Difference of Convex Functions
 
 ## Prerequisites:
-1. python 3.7
-
-2. [torch](https://pytorch.org/) (version 1.7.0 or higher?!)
-
-3. [numpy](https://numpy.org)
-
-4. [matplotlib](https://matplotlib.org)
-
-5. [tqdm](https://pypi.org/project/tqdm/)
-
-6. [cuda](https://developer.nvidia.com/cuda-downloads) (if you have GPU!)
-
-
-
+1. python 3.9
 
 ## How to run?
 
